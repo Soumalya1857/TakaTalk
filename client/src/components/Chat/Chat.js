@@ -8,6 +8,7 @@ import './Chat.css';
 import InfoBar from '../InfoBar/InfoBar'
 import Input from '../Input/Input'
 import Messages from '../Messages/Messages'
+import RoomUserList from '../RoomUserList/RoomUserList'
 let socket;
 
 
@@ -15,6 +16,7 @@ const Chat = ({ location }) => {
 
     const [name, setName] = useState('');
     const [room, setRoom] = useState('');
+    const [users, setUsers] = useState('');
     const [message, setMessage] = useState(''); // track state of a single message
     const [messages, setMessages] = useState([]);// track state of all the messages
     const ENDPOINT = 'localhost:5000';
@@ -51,10 +53,13 @@ const Chat = ({ location }) => {
 
         socket.on('message',(message)=>{
              // admin generated messages
-             setMessages([...messages, message]);
+             setMessages(messages => [...messages, message]);
         });
 
-    }, [messages]);
+        socket.on("roomData", ({ users }) => {
+            setUsers(users);
+        });
+    }, []);
 
     const sendMessage = (event)=> {
         event.preventDefault();
@@ -78,6 +83,7 @@ const Chat = ({ location }) => {
                 onChange={(event)=> setMessage(event.target.value)}
                 onKeyPress= {(event)=> event.key === 'Enter' ? sendMessage(event) : null}  */}
             </div>
+            <RoomUserList users={users}/>
         </div>
     )
 };

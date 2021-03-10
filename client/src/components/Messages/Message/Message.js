@@ -6,11 +6,14 @@ import ReactEmoji from 'react-emoji';
 const Message = ({message: {user, text}, name}) => {
 
     let isCurrentUser = false;
+    let isAdmin = false;
     const trimedName = name.trim().toLowerCase();
 
     if(user === trimedName) {
         isCurrentUser = true;
     }
+
+    if(user === 'admin') isAdmin = true;
 
     return(
         isCurrentUser ? (
@@ -22,7 +25,8 @@ const Message = ({message: {user, text}, name}) => {
                 </div>
             </div>
         )
-        : (
+        : (!isAdmin 
+            ? (
             // not sent by current user
             <div className="messageContainer justifyStart"> 
                 <div className='messageBox backgroundLight'>
@@ -30,6 +34,15 @@ const Message = ({message: {user, text}, name}) => {
                 </div>
                 <p className='sentText pl-10'>{user}</p>
             </div>
+            ) 
+            : (
+                // admin code here
+                <div className = "messageContainer justifyCenter">
+                    <div className='messageBox backgroundGray'>
+                    <p className='messageText colorDark'>{text}</p>
+                    </div>
+                </div>
+            )
         )
     )
 };

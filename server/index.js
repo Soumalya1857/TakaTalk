@@ -3,7 +3,12 @@ const socketio = require('socket.io');
 const http = require('http');
 
 
-const {addUser, removeUser, getUser, getUsersInRoom } = require('./users');
+const { addUser, addIdToUser, addUserToRoom, removeUserFromRoom, 
+    getUser, removeUser, getUser, getUsersInRoom, getAllUsers, 
+    getAllRooms, getAllRoomsForAUser, getAllRoomForASocket, 
+    existUser, getUserByName} = require('./users');
+
+const {addRegisteredUser, checkLoggedInUser} = require('./authentication.js');
 const PORT = process.env.PORT || 5000;
 const router = require('./router');
 const app = express();
@@ -23,31 +28,95 @@ app.use(router);
 io.on('connect', (socket)=>{
     console.log("We have a new connection!!");
 
-    socket.on('join',({name, room}, callback)=>{
-        //callback(); // basically for error handling and needed to pass as 3rd argument in the client part
-        const { error, user } = addUser({id: socket.id, name:name, room: room}); // it can return 2 things
+    // socket.on('authenticate', ()=>{
+    //     // authentication code here
+    // });
+
+
+    socket.on('register', ({userName, password}, callback)=> {
+        const newUser = {userName: userName, password: password};
+        const {error, user} = addRegisteredUser(newUser);
         if(error) return callback(error);
 
-        // for no error
-        socket.join(user.room);
+        addUser({userName: userName, socketID: socket.id})
+        return callback();
+    })
 
-        // user inside the room
-        socket.emit('message', {user: 'admin', text: `Welcome ${user.name}!!`});
-        socket.broadcast.to(user.room).emit('message', {user: 'admin', text: `${user.name} just slid into the room!`});
 
-        io.to(user.room).emit('roomData', {room: user.room, users: getUsersInRoom(user.room)})
-        callback();
+
+    socket.on('login', ({userName, password}, callback)=> {
+        const {error, user} = checkLoggedInUser({userName, password});
+        if(error) return callback(error);
+        addUser({userName: userName, socketID: socket.id});
+
     });
 
+    socket.on('getRoomsForAUser', ({userName}, callback)=>{
 
-    socket.on('sendMessage', (message, callback)=> {
+        const allRooms = getAllRoomsForAUser(userName);
+        socket.emit('allRooms', {allRooms: allRooms});
+    })
+
+    // will be triggered when user adds in a new room
+    // multicast
+    socket.on('join',({name, room}, callback)=>{
+        //callback(); // basically for error handling and needed to pass as 3rd argument in the client part
+        const roomData = addUserToRoom({ name:name, room: room}); // it can return 2 things user object and exist or new
+        //if(error) return callback(error);
+
+        // for no error
+        socket.join(roomData.room);
+
+        // user inside the room
+
+        // if unicast socket.to(user.room).emit(message)
+        
+        socket.emit('message', {user: 'admin', text: `Welcome ${user.name}!!`});
+        socket.broadcast.to(roomData.room).emit('message', {user: 'admin', text: `${user.name} just slid into the room!`});
+        
+ 
+
+        io.to(roomData.room).emit('roomData', {room: userRoom, users: getUsersInRoom(userRoom)})
+        callback();
+    });
+//////////////////////////////////////////////////////////////////////////
+    socket.on('join private chat' , ({otherPersonName}, callback)=> {
+
+        const existance = existUser(otherPersonName);
+        if(existance.status){
+            socket.to(existance.value).emit('private message', {user: 'admin', id: existance.value, text: 'Happy Chatting!'}) 
+        } else{
+            socket.to(existance.value).emit('private message', {user: 'admin', id: existance.value, text: 'Ask your frind to get online :)'});
+
+        }
+
+            
+    });
+    socket.on('private message', ({userName, msg}) => {
+
+        const user = getUser(userName)
+        socket.to(user.id).emit("private message", {user: user.userName, text: msg, id: socket.id});
+    });
+
+/////////////////////////////////////////////////////////////////////////////////
+    socket.on('sendMessage', ({room, message}, callback)=> {
         const user = getUser(socket.id);
 
-        io.to(user.room).emit('message', {user: user.name, text: message});
+        io.to(room).emit('message', {user: user.userName, text: message});
         //io.to(user.room).emit('roomData', {room: user.room, users: getUsersInRoom(user.room)});
 
         callback();
     });
+
+    socket.on('leaveRoom', ({room, userName}, callback)=> {
+
+        const user = removeUserFromRoom(room, userName);
+
+        io.to(room).emit('message', {user: 'admin', text: `${user.userName} left the room!`});
+        io.to(room).emit('roomData', {room: room, users: getUsersInRoom(room)});
+
+        callback()
+    })
 
     socket.on('disconnect', ()=>{
         console.log("User left!!");
@@ -55,8 +124,14 @@ io.on('connect', (socket)=>{
 
         if(user)
         {
-            io.to(user.room).emit('message', {user:'admin', text: `${user.name} left the room!!`});
-            io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room)});
+            
+            let allRooms = getAllRoomForASocket(socket.id);
+            for(room in allRooms)
+            {
+                io.to(room).emit('message', {user:'admin', text: `${user.userName} left the room!!`});
+                io.to(room).emit('roomData', { room: room, users: getUsersInRoom(room)});
+            }
+            
         }
     });
 });

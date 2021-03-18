@@ -56,7 +56,7 @@ const Chat = ({ location }) => {
              setMessages(messages => [...messages, message]);
         });
 
-        socket.on("roomData", ({ users }) => {
+        socket.on("roomData", ({room, users }) => {
             setUsers(users);
         });
     }, []);
@@ -65,7 +65,7 @@ const Chat = ({ location }) => {
         event.preventDefault();
 
         if(message){
-            socket.emit('sendMessage', message, ()=> setMessage(''));
+            socket.emit('sendMessage',{ room, message}, ()=> setMessage(''));
             // 3rd parameter is a cleanup code for textField
         }
     }

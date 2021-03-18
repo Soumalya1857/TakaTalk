@@ -6,7 +6,7 @@ const rooms = []; // room = {roomName: name, users = []}
 
 // after authentication adding user
 const addUser = ({userName, socketID}) => {
-    userName = userName.trim().toLowerCase();
+    //userName = userName.trim().toLowerCase();
     //room = room.trim().toLowerCase();
 
     //const existingUser = users.find((user)=> user.room === room && user.name === name);
@@ -24,11 +24,13 @@ const addUser = ({userName, socketID}) => {
     //     return false;
     // })
 
-    const existingUser = users.find((user)=> user.userName === userName)
+    const existingUserIndex = users.findIndex((user)=> user.userName === userName)
         
-    if(existingUser){
+    if(existingUserIndex !== -1){
         //return { user : existingUser, status: 'exist', room: room};
-        return {user: existingUser, status: 'exist'}
+        users[existingUserIndex].id = socketID
+        console.log("Inside user! yoooo founddd!!")
+        return {user: users[existingUserIndex], status: 'exist'}
     }
 
     //const user = { id, name, room};
@@ -40,7 +42,7 @@ const addUser = ({userName, socketID}) => {
     // users.push(user);
 
     // return { user: user, status: 'new', room: room};
-
+    console.log("Inside user! Not found :((((((")
     const user = {userName: userName, id: socketID}
     users.push(user)
     return {user: user, status: 'new'}
@@ -53,7 +55,7 @@ const addIdToUser = ({name, Id}) => {
 } 
 
 const addUserToRoom = ({room, userName}) => {
-    const index = rooms.findIndex((currRoom) => currRoom.name === room);
+    const index = rooms.findIndex((currRoom) => currRoom.roomName === room);
 
     if(index !== -1)
     {
@@ -66,6 +68,19 @@ const addUserToRoom = ({room, userName}) => {
 
         rooms[index].users.push(users[indexOfUser]);
         return rooms[index];
+    }
+    else{
+        // room doesn't exist
+        // create one
+
+        const newRoom = {roomName: room, users: []}
+        const indexOfUser = users.findIndex((user)=> user.userName === userName);
+        newRoom.users.push(users[indexOfUser])
+        rooms.push(newRoom)
+        console.log("ROOM CREATED!!", newRoom)
+        return newRoom
+        
+
     }
 }
 
@@ -84,7 +99,7 @@ const removeUserFromRoom = ({roomName, userName}) => {
 
 //const getUser = (name) => users.find((user) => user.name === name);
 
-const getUser = (Id)=>{
+const getUser = (id)=>{
 
     // const index = users.find((user)=> user.socketId.find((id)=> id === socketId));
     // const user = users[index];
@@ -97,13 +112,19 @@ const getUserByName = (userName)=>{
     return users.find((user)=> user.userName === userName);
 }
 
-const removeUser = (Id)=> {
+const removeUser = (id)=> {
     const index = users.findIndex((user)=> user.id === id);
     return users.splice(index, 1)[0];
 }
 
 
-const getUsersInRoom = (roomName) => rooms.filter((room)=> room.room === roomName)[0].users;
+const getUsersInRoom = (roomName) => {
+    console.log('pita', roomName)
+    console.log("All rooms: ", rooms)
+    let roomArray = rooms.findIndex((room)=> room.roomName === roomName)
+    console.log("Inside getUsersInToom=> ", roomArray)
+    return rooms[roomArray].users
+}
 const getAllUsers = ()=> users;
 const getAllRooms = () => rooms; 
 

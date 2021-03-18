@@ -47,11 +47,12 @@ html, body {
       border-radius: 5px;
       display: inline-block;
       border: none;
-      width: 100%;
+      width: 44%;
   }
   
   .mt-20 {
     margin-top: 20px;
+    margin-right: 20px;
   }
   
   @media (min-width: 320px) and (max-width: 480px) {

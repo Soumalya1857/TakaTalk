@@ -4,7 +4,7 @@ const http = require('http');
 
 
 const { addUser, addIdToUser, addUserToRoom, removeUserFromRoom, 
-    getUser, removeUser, getUser, getUsersInRoom, getAllUsers, 
+    getUser, removeUser, getUsersInRoom, getAllUsers, 
     getAllRooms, getAllRoomsForAUser, getAllRoomForASocket, 
     existUser, getUserByName} = require('./users');
 
@@ -34,8 +34,11 @@ io.on('connect', (socket)=>{
 
 
     socket.on('register', ({userName, password}, callback)=> {
+        //console.log("Inside register")
+        //console.log('inside register=> ', socket.id)
         const newUser = {userName: userName, password: password};
         const {error, user} = addRegisteredUser(newUser);
+        //console.log(user.userName);
         if(error) return callback(error);
 
         addUser({userName: userName, socketID: socket.id})
@@ -45,9 +48,13 @@ io.on('connect', (socket)=>{
 
 
     socket.on('login', ({userName, password}, callback)=> {
+        //console.log("Inside login")
         const {error, user} = checkLoggedInUser({userName, password});
         if(error) return callback(error);
+        //console.log(user.userName);
         addUser({userName: userName, socketID: socket.id});
+
+        return  callback();
 
     });
 
@@ -59,24 +66,28 @@ io.on('connect', (socket)=>{
 
     // will be triggered when user adds in a new room
     // multicast
-    socket.on('join',({name, room}, callback)=>{
+    socket.on('join',({name:name, room:room}, callback)=>{
         //callback(); // basically for error handling and needed to pass as 3rd argument in the client part
-        const roomData = addUserToRoom({ name:name, room: room}); // it can return 2 things user object and exist or new
+        //console.log(name, room);
+        const currUser = addUser({userName: name, socketID: socket.id});
+        //console.log("Inside join=>", currUser.user.userName, currUser.user.id);
+        const roomData = addUserToRoom({ userName:name, room: room}); // it can return 2 things user object and exist or new
         //if(error) return callback(error);
 
         // for no error
-        socket.join(roomData.room);
+        const nameOfTheRoom = roomData.roomName
+        //console.log(nameOfTheRoom, 'inside join')
+        socket.join(nameOfTheRoom);
 
         // user inside the room
 
         // if unicast socket.to(user.room).emit(message)
         
-        socket.emit('message', {user: 'admin', text: `Welcome ${user.name}!!`});
-        socket.broadcast.to(roomData.room).emit('message', {user: 'admin', text: `${user.name} just slid into the room!`});
+        socket.emit('message', {user: 'admin', text: `Welcome ${name}!!`});
+        socket.broadcast.to(roomData.roomName).emit('message', {user: 'admin', text: `${name} just slid into the room!`});
         
- 
-
-        io.to(roomData.room).emit('roomData', {room: userRoom, users: getUsersInRoom(userRoom)})
+        io.to(roomData.roomName).emit('roomData', {room: `${roomData.roomName}`, users: getUsersInRoom(nameOfTheRoom)})
+        console.log("Users In a room: ", getUsersInRoom(nameOfTheRoom))
         callback();
     });
 //////////////////////////////////////////////////////////////////////////
@@ -100,10 +111,12 @@ io.on('connect', (socket)=>{
 
 /////////////////////////////////////////////////////////////////////////////////
     socket.on('sendMessage', ({room, message}, callback)=> {
+        //console.log('inside sendMessage=> ', socket.id)
         const user = getUser(socket.id);
+        //console.log(user.id, user.userName)
 
         io.to(room).emit('message', {user: user.userName, text: message});
-        //io.to(user.room).emit('roomData', {room: user.room, users: getUsersInRoom(user.room)});
+        io.to(room).emit('roomData', {room: room, users: getUsersInRoom(room)});
 
         callback();
     });

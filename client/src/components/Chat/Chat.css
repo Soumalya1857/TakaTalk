@@ -1,9 +1,22 @@
 .outerContainer {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
   height: 100vh;
   background-color: #1A1A1D;
+}
+
+.roomsOfAUser{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
+  border-radius: 8px;
+  height: 80%;
+  width: 20%;
+  padding-left: 10px;
+  padding-right: 10px;
+  border: red solid 10px;
 }
 
 .container {

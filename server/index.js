@@ -88,25 +88,23 @@ io.on('connect', (socket)=>{
         
         io.to(roomData.roomName).emit('roomData', {room: `${roomData.roomName}`, users: getUsersInRoom(nameOfTheRoom)})
         console.log("Users In a room: ", getUsersInRoom(nameOfTheRoom))
-        callback();
+        //callback();
     });
 //////////////////////////////////////////////////////////////////////////
-    socket.on('join private chat' , ({otherPersonName}, callback)=> {
+    socket.on('join_private_chat' , ({otherPersonName}, callback)=> {
 
         const existance = existUser(otherPersonName);
         if(existance.status){
-            socket.to(existance.value).emit('private message', {user: 'admin', id: existance.value, text: 'Happy Chatting!'}) 
+            socket.to(existance.value).emit('private_message', {user: 'admin', id: existance.value, text: 'Happy Chatting!'}) 
         } else{
             socket.to(existance.value).emit('private message', {user: 'admin', id: existance.value, text: 'Ask your frind to get online :)'});
 
-        }
-
-            
+        }        
     });
     socket.on('private message', ({userName, msg}) => {
 
         const user = getUser(userName)
-        socket.to(user.id).emit("private message", {user: user.userName, text: msg, id: socket.id});
+        socket.to(user.id).emit("send private message", {user: user.userName, text: msg/*, id: socket.id*/});
     });
 
 /////////////////////////////////////////////////////////////////////////////////

@@ -83,8 +83,8 @@ io.on('connect', (socket)=>{
 
         // if unicast socket.to(user.room).emit(message)
         
-        socket.emit('message', {user: 'admin', text: `Welcome ${name}!!`});
-        socket.broadcast.to(roomData.roomName).emit('message', {user: 'admin', text: `${name} just slid into the room!`});
+        socket.emit('message', {user: 'admin', text: `Welcome ${name}!!`, room: `${nameOfTheRoom}`});
+        socket.broadcast.to(roomData.roomName).emit('message', {user: 'admin', text: `${name} just slid into the room!`, room: `${nameOfTheRoom}`});
         
         io.to(roomData.roomName).emit('roomData', {room: `${roomData.roomName}`, users: getUsersInRoom(nameOfTheRoom)})
         console.log("Users In a room: ", getUsersInRoom(nameOfTheRoom))
@@ -101,10 +101,10 @@ io.on('connect', (socket)=>{
 
         }        
     });
-    socket.on('private message', ({userName, msg}) => {
+    socket.on('private_message', ({myName, userName/*kake pathacchi*/, message}) => {
 
         const user = getUser(userName)
-        socket.to(user.id).emit("send private message", {user: user.userName, text: msg/*, id: socket.id*/});
+        socket.to(user.id).emit("send private message", {user: myName/*jar theke msg ta eseche */, text: message/*, id: socket.id*/});
     });
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ io.on('connect', (socket)=>{
         const user = getUser(socket.id);
         //console.log(user.id, user.userName)
 
-        io.to(room).emit('message', {user: user.userName, text: message});
+        io.to(room).emit('message', {user: user.userName, text: message, room: room});
         io.to(room).emit('roomData', {room: room, users: getUsersInRoom(room)});
 
         callback();

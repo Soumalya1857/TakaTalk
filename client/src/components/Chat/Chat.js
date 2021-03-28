@@ -28,8 +28,9 @@ const Chat = ({ location }) => {
     const [roomName, setRoomName] = useState(''); // roomName to be send to server
     const [allRooms, setAllRooms] = useState(['r/broadcast'])
     const [type, setType] = useState('r') // type can be r or u
-        
-
+    //const [messageStore, setMessageStore] = useState([{room: 'r/broadcast', messages: []}])
+    let temporary;
+    const messageStore = [{room: 'r/broadcast', messages: []}]
     useEffect(()=>{
 
         const { name, room } = queryString.parse(location.search);
@@ -71,7 +72,36 @@ const Chat = ({ location }) => {
 
         socket.on('message',(message)=>{
              // admin generated messages
-             setMessages(messages => [...messages, message]);
+             //setMessages(messages => [...messages, message]);
+
+             const messageToStore = {user: message.user, text: message.text}
+             const currRoom = 'r/'.concat(message.room)
+
+            //  setMessageStore(messageStore => {
+            //     const nowRoomIndex = messageStore.findIndex((obj)=> obj.room === currRoom)
+            //     if(nowRoomIndex !== -1)
+            //         messageStore[nowRoomIndex].messages.push(messageToStore)
+
+            //     else{
+            //         messageStore.push({room: `${currRoom}`, users: []})
+            //         const len = messageStore.length()
+
+            //         messageStore[len-1].messages.push(messageToStore)
+            //     }
+            //  })
+
+            const nowRoomIndex = messageStore.findIndex((obj)=> obj.room === currRoom)
+            if(nowRoomIndex !== -1){
+                messageStore[nowRoomIndex].messages.push(messageToStore)
+                setMessages([...messageStore[nowRoomIndex].messages])
+            }
+            else{
+                messageStore.push({room: `${currRoom}`, messages: []})
+                const len = messageStore.length()
+                messageStore[len-1].messages.push(messageToStore)
+                setMessages([...messageStore[len-1].messages])
+            }
+
         });
 
         socket.on("roomData", ({room: room, users: users }) => {
@@ -79,8 +109,22 @@ const Chat = ({ location }) => {
         });
 
         socket.on("private_message", (message)=> {
-            setMessages(messages => [...messages, message]);
-            setUsers('')
+            // setMessages(messages => [...messages, message]);
+            // setUsers('')
+            const currUserName = 'u/'.concat(message.user)
+            const nowUserIndex = messageStore.findIndex((obj)=> obj.room === currUserName)
+            if(nowUserIndex !== -1)
+            {
+                // already found 
+                messageStore[nowUserIndex].messages.push({user: message.user, text: message.text})
+                setMessages([...messageStore[nowUserIndex].messages])
+            }
+            else{
+                messageStore.push({room: `${currUserName}`, messages: []})
+                const len = messageStore.length()
+                messageStore[len-1].messages.push({user: message.user, text: message.text})
+                setMessages([...messageStore[len-1].messages])
+            }
         })
 
     }, []);
@@ -88,9 +132,15 @@ const Chat = ({ location }) => {
     const sendMessage = (event)=> {
         event.preventDefault();
 
-        if(message){
+        if(message && type === 'r'){
             socket.emit('sendMessage',{ room:room, message: message}, ()=> setMessage(''));
             // 3rd parameter is a cleanup code for textField
+        }
+        else if(message && type == 'u'){
+            socket.emit('private_message', {myName: name, userName: room, message: message}, ()=> setMessage(''))
+        }
+        else{
+            alert("Invalid userName")
         }
     }
 
@@ -105,7 +155,8 @@ const Chat = ({ location }) => {
             setType('r')
             setRoom(roomName.substring(2))
             setRoomName("") // hopefully does the cleanup
-            console.log(allRooms)
+            setMessages([])
+            //console.log(allRooms)
         }
 
         else if(roomName && roomName.startsWith('u/'))
@@ -115,13 +166,14 @@ const Chat = ({ location }) => {
             setType('u')
             setRoom(roomName.substring(2))
             setRoomName("") // hopefully does the cleanup
+            setMessages([])
         }
         else
         {
             setRoomName("")
             alert("Invalid name!!!")
         }
-        console.log("hello!")
+        //console.log("hello!")
     }
     
     return (
@@ -130,9 +182,10 @@ const Chat = ({ location }) => {
                 <RoomInputField room= {roomName} setRoom ={setRoomName} addRoom={addRoom}/>
                 <RoomList allRooms={allRooms} addRoom={addRoom}/> 
             </div>
+
             <div className='container'> 
                 <InfoBar room={ room }/>
-                <Messages messages={messages} name={name}/>
+                <Messages messages={messages} type= {type} name={name} room={room} />
                 <Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
                 
                 {/* <input 
@@ -140,7 +193,11 @@ const Chat = ({ location }) => {
                 onChange={(event)=> setMessage(event.target.value)}
                 onKeyPress= {(event)=> event.key === 'Enter' ? sendMessage(event) : null}  */}
             </div>
+
+            <div className='roomUserLists'>
             <RoomUserList users={users}/>
+            </div>
+           
         </div>
     )
 };

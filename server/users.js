@@ -54,9 +54,10 @@ const addIdToUser = ({name, Id}) => {
     users[index].id = Id;
 } 
 
-const addUserToRoom = ({room, userName}) => {
-    const index = rooms.findIndex((currRoom) => currRoom.roomName === room);
+const addUserToRoom = ({userName, room}) => {
 
+    const index = rooms.findIndex((currRoom) => currRoom.roomName === room);
+    console.log("INSIDE ADDUSERTOAROOM::::::::::::::::::::::::::::::::", room, index)
     if(index !== -1)
     {
         const userIndex = rooms[index].users.findIndex((user) => user.userName === userName);

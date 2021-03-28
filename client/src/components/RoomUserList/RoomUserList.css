@@ -1,10 +1,14 @@
 .roomUserList {
     display: flex;
     flex-direction: column;
-    margin-left: 100px;
+    margin-left: 10px;
     color: white;
-    height: 60%;
+    height: 80%;
+    width: 20%;
     justify-content: space-between;
+    overflow: auto;
+    flex: auto;
+    border: red solid 10px;
   }
   
   .activePeoples {
@@ -16,6 +20,8 @@
   .activeItem {
     display: flex;
     align-items: center;
+    justify-content: space-evenly;
+    padding-bottom: 10px;
   }
   
   .activePeoples img {
@@ -30,4 +36,36 @@
     .roomUserList {
       display: none;
     }
+  }
+
+  .itemBox {
+    border-radius: 25px;
+    padding: 5px 40px;
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .itemText {
+    width: 100%;
+    letter-spacing: 0;
+    float: left;
+    font-size: 1.1em;
+    word-wrap: break-word;
+    color: #000;
+  }
+
+  .backgroundBlues {
+    background: #a3eecf;
+  }
+
+  .colorWhites {
+    color: rgb(7, 0, 112);
+  }
+
+  .sentTexts {
+    display: flex;
+    align-items: center;
+    font-family: Helvetica;
+    color: #828282;
+    letter-spacing: 0.3px;
   }

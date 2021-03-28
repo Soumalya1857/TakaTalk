@@ -1,6 +1,6 @@
 import React from 'react';
 
-import onlineIcon from '../../icons/onlineIcon.png'
+//import onlineIcon from '../../icons/onlineIcon.png'
 
 import './RoomUserList.css';
 
@@ -18,14 +18,19 @@ const RoomUserList = ({users}) => (
                 <div>
                      <h1>People currently chatting:</h1>
                      <div className="activePeoples">
-                         <h2>
-                             {users.map(({name})=> (
-                                 <div key={name} className="activeItem">
-                                     {name}
-                                     <img alt="Online Icon" src={onlineIcon} />
+                         <h3>
+                             {users.map(({userName , id})=> (
+
+                                 <div key={userName} className="activeItem">
+                                     
+                                     <div className='itemBox backgroundBlues'>
+                                        <p className='sentTexts colorWhites'>{userName}</p>
+                                    </div>
+                                     
+                                      
                                  </div>
                              ))}
-                         </h2>
+                         </h3>
                     </div>
                 </div>
             )
